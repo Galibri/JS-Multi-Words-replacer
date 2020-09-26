@@ -222,61 +222,78 @@
     <script>
         (function ($) {
 
-            function replacerFunc() {
-                let converted_arr = [];
-                let convert_text = $('.original textarea').val();
-
-                jsonFileObject = {}
-
-                // request json data from file
+            // Set data to localStorae of the browser on page load.
+            $(document).ready(function() {
                 $.ajax({
                     type: "GET",
                     url: 'homophone-list.json',
                     contentType: "text/html; charset=UTF-8",
                     dataType: "text",
                     success: function (data) {
-                        jsonFileObject = JSON.parse(data)
+                        localStorage.setItem('gwobject', data)
                     }
-                }).done(function () {
-                    // split and convert words
-                    splited_text = convert_text.split(/([?!,.\s]+)/g)
+                })
+            })
 
-                    splited_text.forEach(replaceMethod)
+            function replacerFunc() {
+                let converted_arr = [];
+                let convert_text = $('.original textarea').val();
 
-                    function replaceMethod(word, index) {
-                        if ($.trim(word) == '') {
-                            return
-                        }
+                // Get items from localStorage
+                jsonFileObject = JSON.parse(localStorage.getItem('gwobject'))
 
-                        if (jsonFileObject.hasOwnProperty(word) || jsonFileObject.hasOwnProperty(word
-                            .toLowerCase())) {
-                            if (word[0] === word[0].toUpperCase()) {
+                // split and convert words
+                splited_text = convert_text.split(/([?!,.\s]+)/g)
 
+                // Convert each word
+                splited_text.forEach(replaceMethod)
+
+                // Replacer engine
+                function replaceMethod(word, index) {
+                    if ($.trim(word) == '') {
+                        return
+                    }
+
+                    if (jsonFileObject.hasOwnProperty(word) || jsonFileObject.hasOwnProperty(word
+                        .toLowerCase())) {
+                        if (word[0] === word[0].toUpperCase()) {
+
+                            // The word "I" don't have a small letter, so skip it to capitalize
+                            if(word === "I") {
+                                lowerCasedWord = jsonFileObject[word]
+                                converted_arr.push(capitalizeFirstLetter(lowerCasedWord))
+                            } else {
                                 lowerCasedWord = jsonFileObject[word.toLowerCase()]
                                 converted_arr.push(capitalizeFirstLetter(lowerCasedWord))
-
-                            } else {
-                                converted_arr.push(jsonFileObject[word])
                             }
 
                         } else {
-                            converted_arr.push(word)
+                            converted_arr.push(jsonFileObject[word])
                         }
+
+                    } else {
+                        converted_arr.push(word)
                     }
-                    finalString = converted_arr.join(' ').replace(/ +(\W)/g, "$1")
-                    $('.converted textarea').val(finalString)
-                })
+                }
+                finalString = converted_arr.join(' ').replace(/ +(\W)/g, "$1")
+                $('.converted textarea').val(finalString)
+
             }
 
+            // Capitalize the first letter of a string
             function capitalizeFirstLetter(string) {
+                if(string == 'I') {
+                    return string;
+                }
                 return string.charAt(0).toUpperCase() + string.slice(1);
             }
 
+            // Run the replaer on page load
             $(document).ready(function () {
                 replacerFunc()
             })
 
-
+            // Run the replaer when typing
             $(document).on('keyup', '.original textarea', function () {
                 replacerFunc()
             });
@@ -289,7 +306,10 @@
         })(jQuery)
     </script>
 
+    <!-- https://pastebin.com/pu0gbsZg -->
+
 
 </body>
 
 </html>
+
